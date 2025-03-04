@@ -1,0 +1,89 @@
+[model]
+name = "codellama"
+# or name = "llama3.2"
+top_p = 0.9
+max_tokens = 500
+file_selection_temperature = 0.2
+commit_temperature = 0.5
+
+[commit]
+conventional = true
+emoji = true
+max_message_length = 50
+
+[git]
+include_staged = true
+include_unstaged = true
+exclude_patterns = [
+    "*.lock",
+    "target/",
+    "dist/",
+    "node_modules/"
+]
+
+[selection]
+min_files = 2
+max_files = 10
+prioritize_src = true
+exclude_tests = true
+min_changes = 5
+
+[formatting]
+max_diff_lines = 15
+preview_lines = 10
+summary_lines = 5
+indent_size = 2
+show_file_stats = true
+
+[prompts]
+file_selection_system = """You are a precise XML generator. Output ONLY the exact XML structure requested with no additional text or whitespace. Each file must be on its own line with proper XML tags."""
+
+file_selection_context = """Analyze these git changes and select the most important files to examine:
+
+{changes_summary}
+
+Output MUST be valid XML with this EXACT format (indent {indent_size} spaces):
+<files>
+{indent}<file>path/to/file1</file>
+{indent}<file>path/to/file2</file>
+</files>
+
+Rules:
+1. Select {min_files}-{max_files} files that best represent the changes
+2. Prioritize files with core functionality changes
+3. Focus on files in src/ directory
+4. Include both added and modified files if present"""
+
+commit_system = """You are a precise XML generator creating git commit messages. Output ONLY the exact XML structure requested. The message must be a single line, and the description must use bullet points. No extra text, whitespace, issue numbers, or PR references."""
+
+commit_context = """Analyze these git changes and generate a commit message.
+
+=== Changes Summary ===
+{changes_summary}
+
+=== Detailed Changes ===
+{changes_text}
+
+Output MUST be valid XML with this EXACT format (indent {indent_size} spaces):
+<commit>
+{indent}<message>Brief technical summary (max {max_message_length} chars)</message>
+{indent}<description>
+{indent}- Technical change details
+{indent}- Implementation specifics
+{indent}- Impact and reasoning
+{indent}</description>
+</commit>
+
+Requirements:
+1. Message must be clear and concise
+2. Description must use bullet points
+3. Focus on technical details
+4. Describe WHAT changed and WHY"""
+
+[prompts.placeholders]
+changes_summary = "{changes_summary}"
+changes_text = "{changes_text}"
+indent_size = "{indent_size}"
+max_message_length = "{max_message_length}"
+min_files = "{min_files}"
+max_files = "{max_files}"
